@@ -12,14 +12,15 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD, ElementType.TYPE})
 public @interface BMRule
 {
-    String name();
+    String name() default "";
     boolean isInterface() default false;
     boolean isOverriding() default false;
-    String targetClass();
-    String targetMethod();
+    String targetClass() default "";
+    String targetMethod() default "";
     String targetLocation() default "";
     String helper() default "";
     String binding() default "";
     String condition() default "TRUE";
     String action() default "NOTHING";
+    boolean stringParsingEnabled() default true;
 }

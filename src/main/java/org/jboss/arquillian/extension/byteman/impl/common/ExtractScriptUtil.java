@@ -17,10 +17,13 @@
  */
 package org.jboss.arquillian.extension.byteman.impl.common;
 
+import java.lang.reflect.Method;
+
 import org.jboss.arquillian.extension.byteman.api.BMRule;
 import org.jboss.arquillian.extension.byteman.api.BMRules;
 import org.jboss.arquillian.test.spi.event.suite.ClassLifecycleEvent;
 import org.jboss.arquillian.test.spi.event.suite.TestLifecycleEvent;
+import org.jboss.shrinkwrap.descriptor.api.Descriptor;
 
 /**
  * ExtractScriptUtil
@@ -32,10 +35,54 @@ public final class ExtractScriptUtil
 {
     public static String extract(ClassLifecycleEvent event)
     {
+        String fromAnnotations = rulesFromAnnotations(event);
+        String fromMethods = rulesFromMethods(event.getTestClass().getMethods(BMRule.class));
+        String allRules = fromMethods + fromAnnotations;
+
+        if (allRules.isEmpty())
+            return null;
+
+        return allRules;
+    }
+
+    private static String rulesFromAnnotations(ClassLifecycleEvent event)
+    {
         BMRule rule = event.getTestClass().getAnnotation(BMRule.class);
         BMRules rules = event.getTestClass().getAnnotation(BMRules.class);
+        String createRules = createRules(rule, rules);
+        if (createRules == null)
+            return "";
 
-        return createRules(rule, rules);
+        return createRules;
+    }
+
+    private static String rulesFromMethods(Method... methods)
+    {
+        StringBuilder ruleBuilder = new StringBuilder();
+        if (methods.length == 0)
+            return ruleBuilder.toString();
+
+        for (Method method : methods)
+        {
+           try
+           {
+               Class<?> returnType = method.getReturnType();
+               if (Descriptor.class.isAssignableFrom(returnType))
+               {
+                   ruleBuilder.append("\n");
+                   Descriptor descriptor = (Descriptor) method.invoke(null);
+                   ruleBuilder.append(descriptor.exportAsString());
+               }
+           }
+           catch (Exception e)
+           {
+               e.getMessage();
+           }
+        }
+        if (ruleBuilder.length() == 0)
+            return ruleBuilder.toString();
+
+        return ruleBuilder.substring(1);
     }
 
     public static String extract(TestLifecycleEvent event)

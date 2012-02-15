@@ -28,4 +28,6 @@ public interface StatelessManager
    boolean forcedClassLevelFailure();
 
    boolean forcedMethodLevelFailure();
+
+   String readNothing();
 }

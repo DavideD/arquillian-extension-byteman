@@ -1,0 +1,6 @@
+RULE Testing import
+CLASS WhateverWorks
+METHOD whatMethod
+AT THROW
+IF TRUE
+ENDRULE

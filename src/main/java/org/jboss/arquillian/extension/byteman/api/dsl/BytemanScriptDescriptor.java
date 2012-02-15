@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source
- * Copyright 2010, Red Hat Middleware LLC, and individual contributors
+ * Copyright 2012, Red Hat Middleware LLC, and individual contributors
  * by the @authors tag. See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -14,33 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.arquillian.extension.byteman.test.model;
+package org.jboss.arquillian.extension.byteman.api.dsl;
 
-import javax.ejb.Local;
-import javax.ejb.Stateless;
+import org.jboss.shrinkwrap.descriptor.api.Descriptor;
 
 /**
- * StatelessTestBean
+ * Fluent API for the creation of a byteman script containing many rule.
  *
- * @author <a href="mailto:aslak@redhat.com">Aslak Knutsen</a>
- * @version $Revision: $
+ * @author Davide D'Alto
  */
-@Stateless
-@Local(StatelessManager.class)
-public class StatelessManagerBean implements StatelessManager
+public interface BytemanScriptDescriptor extends Descriptor
 {
-   public boolean forcedClassLevelFailure()
-   {
-      return false;
-   }
+   BytemanRuleDefinition rule(String ruleName);
 
-   public boolean forcedMethodLevelFailure()
-   {
-      return false;
-   }
-
-   public String readNothing()
-   {
-      return null;
-   }
 }

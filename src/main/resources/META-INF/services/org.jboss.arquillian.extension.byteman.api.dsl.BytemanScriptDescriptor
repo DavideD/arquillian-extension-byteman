@@ -1,0 +1,3 @@
+implClass=org.jboss.arquillian.extension.byteman.impl.dsl.BytemanScriptDsl
+importerClass=org.jboss.arquillian.extension.byteman.impl.dsl.BytemanScriptDescriptorImporter
+defaultName=rule.bm

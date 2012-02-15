@@ -23,18 +23,30 @@ import org.jboss.arquillian.core.api.Instance;
 import org.jboss.arquillian.core.api.annotation.Inject;
 import org.jboss.arquillian.extension.byteman.api.BMRule;
 import org.jboss.arquillian.extension.byteman.api.BMRules;
+import org.jboss.arquillian.extension.byteman.api.dsl.BytemanRuleDefinition;
+import org.jboss.arquillian.extension.byteman.api.dsl.BytemanScriptDescriptor;
 import org.jboss.arquillian.extension.byteman.impl.BytemanRemoteExtension;
 import org.jboss.arquillian.extension.byteman.impl.common.BytemanConfiguration;
 import org.jboss.arquillian.extension.byteman.impl.common.GenerateScriptUtil;
 import org.jboss.arquillian.extension.byteman.impl.common.SubmitException;
+import org.jboss.arquillian.extension.byteman.impl.dsl.BytemanRuleDsl;
+import org.jboss.arquillian.extension.byteman.impl.dsl.BytemanScriptDsl;
+import org.jboss.arquillian.extension.byteman.impl.dsl.BytemanScriptDescriptorImporter;
+import org.jboss.arquillian.extension.byteman.impl.dsl.BytemanRuleModel;
+import org.jboss.arquillian.extension.byteman.impl.dsl.BytemanScriptModel;
 import org.jboss.byteman.agent.submit.ScriptText;
 import org.jboss.byteman.agent.submit.Submit;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.ArchiveAsset;
+import org.jboss.shrinkwrap.api.asset.Asset;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.jboss.shrinkwrap.descriptor.api.Descriptor;
+import org.jboss.shrinkwrap.descriptor.api.DescriptorImporter;
+import org.jboss.shrinkwrap.descriptor.spi.DescriptorImplBase;
+import org.jboss.shrinkwrap.descriptor.spi.DescriptorImporterBase;
 
 /**
  * BytemanDeploymentAppender
@@ -53,11 +65,17 @@ public class DeploymentAppender implements AuxiliaryArchiveAppender
 
         JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "arquillian-byteman.jar")
                 .addClasses(Submit.class, ScriptText.class, BMRule.class, BMRules.class,
-                            BytemanRemoteExtension.class, GenerateScriptUtil.class, SubmitException.class, BytemanConfiguration.class)
+                            BytemanRemoteExtension.class, GenerateScriptUtil.class, SubmitException.class, BytemanConfiguration.class,
+                            BytemanScriptDescriptor.class, BytemanScriptModel.class, BytemanRuleModel.class, BytemanScriptDsl.class,
+                            DescriptorImplBase.class, Descriptor.class, BytemanScriptDescriptorImporter.class, DescriptorImporterBase.class,
+                            DescriptorImporter.class, BytemanRuleDefinition.class, BytemanRuleDsl.class)
                 .addPackages(false,
                         org.jboss.arquillian.extension.byteman.impl.container.ScriptInstaller.class.getPackage(),
-                        org.jboss.arquillian.extension.byteman.impl.common.BytemanConfiguration.class.getPackage())
-                .addAsServiceProvider(RemoteLoadableExtension.class, BytemanRemoteExtension.class);
+                        org.jboss.arquillian.extension.byteman.impl.common.BytemanConfiguration.class.getPackage(),
+                        org.jboss.shrinkwrap.descriptor.spi.DescriptorImplBase.class.getPackage())
+                .addAsServiceProvider(RemoteLoadableExtension.class, BytemanRemoteExtension.class)
+                .addAsManifestResource(bmDescriptor(), "services/" + BytemanScriptDescriptor.class.getName())
+                ;
 
         jar.addAsResource(new StringAsset(config.toString()), BytemanConfiguration.BYTEMAN_CONFIG);
 
@@ -78,5 +96,19 @@ public class DeploymentAppender implements AuxiliaryArchiveAppender
             jar.add(new ArchiveAsset(agentJar, ZipExporter.class), BytemanConfiguration.BYTEMAN_JAR);
         }
         return jar;
+    }
+
+    private Asset bmDescriptor()
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.append("implClass=");
+        builder.append(BytemanScriptDsl.class.getName());
+        builder.append("\n");
+        builder.append("importerClass=");
+        builder.append(BytemanScriptDescriptorImporter.class.getName());
+        builder.append("\n");
+        builder.append("defaultName=rule.bm\n");
+        Asset descriptorService = new StringAsset(builder.toString());
+        return descriptorService;
     }
 }
